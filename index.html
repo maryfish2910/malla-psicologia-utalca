@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Malla Psicología - Universidad de Talca</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --bg: #fdf6fa;
+      --column-bg: #fbeaf2;
+      --materia: #fff6fa;
+      --materia-border: #eeb6d9;
+      --materia-aprobada: #ffe6f2;
+      --materia-bloqueada: #f5d0e6;
+      --materia-hover: #ffe2f4;
+      --text: #61324b;
+      --title: #c45d8f;
+      --aprobada-border: #c45d8f;
+      --bloqueada-border: #bba5b9;
+      --tooltip-bg: #f9e6f5;
+      --tooltip-border: #d1b0c9;
+      --tooltip-text: #7f476b;
+      --footer: #eeb6d9;
+    }
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Euphemia', 'Segoe UI', 'Arial', sans-serif;
+      min-height: 100vh;
+    }
+    h1, h2, h3 {
+      font-family: 'Euphemia', 'Segoe UI', 'Arial', sans-serif;
+      color: var(--title);
+      letter-spacing: 1px;
+    }
+    .container {
+      max-width: 1500px;
+      margin: 0 auto 30px auto;
+      padding: 24px 8px 8px 8px;
+    }
+    .malla {
+      display: flex;
+      flex-wrap: nowrap;
+      gap: 20px;
+      overflow-x: auto;
+      padding-bottom: 20px;
+    }
+    .columna {
+      background: var(--column-bg);
+      border-radius: 14px;
+      padding: 18px 10px 10px 10px;
+      min-width: 260px;
+      flex: 0 0 260px;
+      box-shadow: 0 2px 8px #eeb6d93d;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+    }
+    .columna h2 {
+      font-size: 1.2em;
+      margin-top: 0;
+      margin-bottom: 2px;
+      text-align: center;
+    }
+    .columna h3 {
+      font-size: 1em;
+      margin: 10px 0 5px 0;
+      color: #a43d6d;
+      text-align: left;
+      padding-left: 10px;
+    }
+    .materia {
+      background: var(--materia);
+      border: 2px solid var(--materia-border);
+      border-radius: 12px;
+      margin-bottom: 10px;
+      padding: 9px 10px;
+      cursor: pointer;
+      font-size: 1em;
+      transition: background 0.13s, border 0.12s, color 0.12s;
+      box-shadow: 0 1px 3px #eeb6d94f;
+      position: relative;
+      min-height: 34px;
+      font-family: inherit;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .materia[data-aprobada="true"] {
+      background: var(--materia-aprobada);
+      border-color: var(--aprobada-border);
+      text-decoration: line-through;
+      color: #99708f;
+      opacity: 0.94;
+    }
+    .materia[data-bloqueada="true"] {
+      background: var(--materia-bloqueada);
+      border-color: var(--bloqueada-border);
+      color: #bda5ba;
+      cursor: not-allowed;
+      opacity: 0.65;
+    }
+    .materia:hover:not([data-bloqueada="true"]) {
+      background: var(--materia-hover);
+      border-color: #f1b6d6;
+    }
+    .materia .check {
+      display: inline-block;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 2px solid var(--materia-border);
+      margin-right: 2px;
+      vertical-align: middle;
+      background: #fff;
+      transition: border 0.1s, background 0.12s;
+      flex-shrink: 0;
+      position: relative;
+    }
+    .materia[data-aprobada="true"] .check {
+      border-color: var(--aprobada-border);
+      background: #ffd4ef;
+    }
+    .materia[data-bloqueada="true"] .check {
+      border-color: var(--bloqueada-border);
+      background: #f5d0e6;
+    }
+    .materia .check::after {
+      content: "";
+      display: none;
+      position: absolute;
+      left: 5px; top: 1px;
+      width: 5px; height: 10px;
+      border: solid #b03c7d;
+      border-width: 0 3px 3px 0;
+      transform: rotate(45deg);
+    }
+    .materia[data-aprobada="true"] .check::after {
+      display: block;
+    }
+    .materia .info-icon {
+      display: none;
+      margin-left: 5px;
+      color: #c45d8f;
+      font-size: 1.2em;
+      cursor: help;
+    }
+    .materia[data-bloqueada="true"] .info-icon {
+      display: inline;
+    }
+    .tooltip {
+      visibility: hidden;
+      opacity: 0;
+      width: max-content;
+      max-width: 260px;
+      background: var(--tooltip-bg);
+      color: var(--tooltip-text);
+      text-align: center;
+      border-radius: 8px;
+      border: 1.5px solid var(--tooltip-border);
+      padding: 7px 13px;
+      position: absolute;
+      z-index: 99;
+      left: 90%;
+      top: 55%;
+      transform: translateY(-60%);
+      transition: opacity 0.12s;
+      box-shadow: 0px 2px 16px #b882ae2c;
+      font-size: 0.98em;
+      pointer-events: none;
+    }
+    .materia[data-bloqueada="true"]:hover .tooltip,
+    .materia[data-bloqueada="true"] .info-icon:hover + .tooltip {
+      visibility: visible;
+      opacity: 1;
+      pointer-events: all;
+    }
+    .footer {
+      text-align: center;
+      margin-top: 30px;
+      padding: 19px 0 12px 0;
+      font-size: 1.1em;
+      color: #a43d6d;
+      letter-spacing: 0.8px;
+      background: var(--footer);
+      border-radius: 0 0 16px 16px;
+      font-family: 'Euphemia', 'Segoe UI', 'Arial', sans-serif;
+    }
+    @media (max-width: 900px) {
+      .malla {
+        gap: 12px;
+      }
+      .columna {
+        min-width: 220px;
+        padding: 10px 4px;
+      }
+      .materia {
+        font-size: 0.98em;
+        padding: 7px 8px;
+      }
+    }
+    @media (max-width: 700px) {
+      .container {
+        padding: 8px 2px;
+      }
+      .malla {
+        gap: 5px;
+      }
+      .columna {
+        min-width: 170px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Malla Curricular Psicología<br><span style="font-size:0.6em;color:#a43d6d;">Universidad de Talca</span></h1>
+    <div class="malla" id="malla"></div>
+    <div class="footer">
+      proporcionado por: <a href="https://instagram.com/_marippppi" target="_blank" style="color:#b03c7d;text-decoration:none;">@_marippppi en Instagram</a>
+    </div>
+  </div>
+  <script>
+const estructura = [
+  {
+    ciclo: "Primer año",
+    semestres: [
+      {
+        nombre: "SEMESTRE 1",
+        materias: [
+          {nombre: "Metodología de la Investigación", id: "metodologia", anual: true},
+          {nombre: "Psicología del Desarrollo Humano", id: "desarrollo", anual: true},
+          {nombre: "Neurobiología aplicada a la psicología", id: "neurobiologia", anual: true},
+          {nombre: "Historia de la psicología y sistemas psicológicos", id: "historia", anual: true},
+          {nombre: "Filosofía y Psicología", id: "filosofia"},
+          {nombre: "Introducción a la Psicología y su praxis", id: "intro"},
+          {nombre: "Comunicación Oral y Escrita 1", id: "comunicacion1"},
+          {nombre: "Idioma extranjero 1", id: "idioma1"},
+        ]
+      },
+      {
+        nombre: "SEMESTRE 2",
+        materias: [
+          {nombre: "Procesos cognitivos 1", id: "procog1", prereq: ["filosofia"]},
+          {nombre: "Comunicación Oral y Escrita 2", id: "comunicacion2", prereq: ["comunicacion1"]},
+          {nombre: "Idioma extranjero 2", id: "idioma2", prereq: ["idioma1"]},
+          {nombre: "Técnicas de Análisis estadísticos en Psicología 1", id: "estadistica1"},
+        ]
+      },
+    ]
+  },
+  {
+    ciclo: "Segundo año",
+    semestres: [
+      {
+        nombre: "SEMESTRE 3",
+        materias: [
+          {nombre: "Psicología social 1", id: "social1", prereq: ["metodologia"]},
+          {nombre: "Psicología de la Personalidad 1", id: "personalidad1", prereq: ["desarrollo"]},
+          {nombre: "Evaluación de la inteligencia y procesos neuropsicológicos", id: "evaluacionneuro", prereq: ["neurobiologia"]},
+          {nombre: "Motivación y procesos emocionales", id: "motivacion"},
+          {nombre: "Procesos de aprendizaje básico", id: "aprendizajebasico", prereq: ["procog1"]},
+          {nombre: "Técnicas de Análisis estadístico en Psicología 2", id: "estadistica2", prereq: ["estadistica1"]},
+          {nombre: "Autogestión del aprendizaje", id: "autogestion"},
+          {nombre: "Idioma extranjero 3", id: "idioma3", prereq: ["idioma2"]},
+          {nombre: "Deportes 1", id: "deportes1"}
+        ]
+      },
+      {
+        nombre: "SEMESTRE 4",
+        materias: [
+          {nombre: "Psicología social 2", id: "social2", prereq: ["social1"]},
+          {nombre: "Psicología de la Personalidad 2", id: "personalidad2", prereq: ["desarrollo"]},
+          {nombre: "Técnicas de Intervención Individual", id: "intervencionind", prereq: ["social1"]},
+          {nombre: "Evaluación de la personalidad 1", id: "evaluacionpers1", prereq: ["personalidad1"]},
+          {nombre: "Memoria Humana", id: "memoria", prereq: ["aprendizajebasico"]},
+          {nombre: "Teoría y Construcción de Pruebas Psicológicas 1", id: "teoriapruebas1", prereq: ["estadistica2"]},
+          {nombre: "Trabajo en equipo y desarrollo de habilidades sociales", id: "trabajoenequipo", prereq: ["autogestion"]},
+          {nombre: "Deportes 2", id: "deportes2"}
+        ]
+      }
+    ]
+  },
+  {
+    ciclo: "Tercer año",
+    semestres: [
+      {
+        nombre: "SEMESTRE 5",
+        materias: [
+          {nombre: "Psicología social 3", id: "social3", prereq: ["social2"]},
+          {nombre: "Técnicas de recolección y análisis de datos cualitativos", id: "recoleccioncualitativa", prereq: ["metodologia"]},
+          {nombre: "Psicología del trabajo y las organizaciones 1", id: "trabajoorg1", prereq: ["social2"]},
+          {nombre: "Evaluación de la personalidad 2", id: "evaluacionpers2", prereq: ["personalidad2"]},
+          {nombre: "Procesos cognitivos 2", id: "procog2", prereq: ["memoria"]},
+          {nombre: "Teoría y Construcción de Pruebas Psicológicas 2", id: "teoriapruebas2", prereq: ["teoriapruebas1"]},
+          {nombre: "Comprensión de contextos sociales", id: "contextossociales", prereq: ["comunicacion2"]},
+          {nombre: "Psicopatología infanto-juvenil", id: "psicopatologiainfanto", prereq: ["desarrollo"]}
+        ]
+      },
+      {
+        nombre: "SEMESTRE 6",
+        materias: [
+          {nombre: "Psicología comunitaria", id: "comunitaria", prereq: ["social3"]},
+          {nombre: "Fundamentos de la psicoterapia 1", id: "psicoterapia1", prereq: ["intervencionind"]},
+          {nombre: "Psicología del trabajo y las organizaciones 2", id: "trabajoorg2", prereq: ["trabajoorg1"]},
+          {nombre: "Técnicas de Intervención Grupal", id: "intervenciongrupal", prereq: ["social3", "intervencionind"]},
+          {nombre: "Psicología educacional 1", id: "educacional1", prereq: ["procog2", "desarrollo"]},
+          {nombre: "Modulo 1 de integración de competencias psicológicas: Investigación", id: "modulo1", prereq: ["teoriapruebas2", "recoleccioncualitativa"]},
+          {nombre: "Comprensión de contextos culturales", id: "contextosculturales", prereq: ["contextossociales"]},
+          {nombre: "Psicopatología de adultos", id: "psicopatologiaadultos", prereq: ["personalidad2"]}
+        ]
+      }
+    ]
+  },
+  {
+    ciclo: "Cuarto año",
+    semestres: [
+      {
+        nombre: "SEMESTRE 7",
+        materias: [
+          {nombre: "Intervención comunitaria", id: "intervencioncomunitaria", prereq: ["comunitaria"]},
+          {nombre: "Fundamentos de la psicoterapia 2", id: "psicoterapia2", prereq: ["psicoterapia1"]},
+          {nombre: "Desarrollo y cambio organizacional", id: "cambioorg", prereq: ["trabajoorg2"]},
+          {nombre: "Selección de personas", id: "seleccion", prereq: ["evaluacionpers2"]},
+          {nombre: "Psicología educacional 2", id: "educacional2", prereq: ["educacional1"]},
+          {nombre: "ELECTIVO (150)", id: "electivo150"},
+          {nombre: "Ética y responsabilidad social", id: "etica", prereq: ["contextosculturales", "trabajoenequipo"]},
+          {nombre: "Taller de psicodiagnóstico y evaluación", id: "tallerpsicodiagnostico", prereq: ["psicopatologiaadultos", "personalidad2"]}
+        ]
+      },
+      {
+        nombre: "SEMESTRE 8",
+        materias: [
+          {nombre: "Diseño y evaluación de proyectos sociales", id: "disenoproyectos", prereq: ["intervencioncomunitaria"]},
+          {nombre: "Desarrollo de competencias profesionales en el ámbito organizacional", id: "competenciasorg", prereq: ["trabajoorg2", "intervenciongrupal"]},
+          {nombre: "Gestión estratégica de personas", id: "gestionpersonas", prereq: ["cambioorg"]},
+          {nombre: "Neuropsiquiatría y psicofarmacología", id: "neuropsiquiatria", prereq: ["psicopatologiaadultos", "evaluacionneuro"]},
+          {nombre: "Psicología educacional 3", id: "educacional3", prereq: ["educacional2"]},
+          {nombre: "Modulo 2 de integración de competencias psicológicas: Diseño de intervención (210)", id: "modulo2"},
+          {nombre: "Responsabilidad social", id: "responsabilidad", prereq: ["etica"]},
+          {nombre: "Clínica infanto-juvenil", id: "clinicainfanto", prereq: ["psicopatologiainfanto"]}
+        ]
+      }
+    ]
+  },
+  {
+    ciclo: "Quinto año",
+    semestres: [
+      {
+        nombre: "SEMESTRE 9",
+        materias: [
+          {nombre: "Proyecto de memoria", id: "proyectomemoria", prereq: ["modulo1"]},
+          {nombre: "Electivo de formación profesional 1", id: "electivo1"},
+          {nombre: "Electivo de formación profesional 2", id: "electivo2"},
+          {nombre: "Electivo de formación profesional 3", id: "electivo3"},
+          {nombre: "Electivo de formación profesional 4", id: "electivo4"},
+          {nombre: "Electivo de formación profesional 5", id: "electivo5"},
+        ]
+      },
+      {
+        nombre: "SEMESTRE 10",
+        materias: [
+          {nombre: "MEMORIA", id: "memoriafinal", prereq: ["proyectomemoria"]},
+          {nombre: "PRACTICA", id: "practica"}
+        ]
+      }
+    ]
+  }
+];
+
+// Mapa de ids a nombre para tooltips
+const idToNombre = {};
+estructura.forEach(ciclo =>
+  ciclo.semestres.forEach(sem =>
+    sem.materias.forEach(mat => idToNombre[mat.id] = mat.nombre)
+  )
+);
+
+const STORAGE_KEY = "malla-psicologia-utalca-v3";
+let materiasAprobadas = new Set();
+
+function cargarProgreso() {
+  try {
+    const data = JSON.parse(localStorage.getItem(STORAGE_KEY));
+    if (data && Array.isArray(data)) {
+      materiasAprobadas = new Set(data);
+    }
+  } catch {}
+}
+function guardarProgreso() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify([...materiasAprobadas]));
+}
+function esAprobada(id) {
+  return materiasAprobadas.has(id);
+}
+function puedeAprobar(mat) {
+  if (!mat.prereq) return true;
+  return mat.prereq.every(pr => materiasAprobadas.has(pr));
+}
+function requisitosFaltantes(mat) {
+  if (!mat.prereq) return [];
+  return mat.prereq.filter(pr => !materiasAprobadas.has(pr));
+}
+
+function crearMateria(mat) {
+  const aprobada = esAprobada(mat.id);
+  const bloqueada = !aprobada && !puedeAprobar(mat);
+
+  const div = document.createElement("div");
+  div.className = "materia";
+  div.setAttribute("data-id", mat.id);
+  div.setAttribute("data-aprobada", aprobada ? "true" : "false");
+  div.setAttribute("data-bloqueada", bloqueada ? "true" : "false");
+  div.title = "";
+
+  // Check visual
+  const check = document.createElement("span");
+  check.className = "check";
+  div.appendChild(check);
+
+  // Nombre
+  const nombre = document.createElement("span");
+  nombre.innerText = mat.nombre;
+  div.appendChild(nombre);
+
+  // Tooltip si está bloqueada
+  if (bloqueada) {
+    const info = document.createElement("span");
+    info.className = "info-icon";
+    info.innerHTML = "&#9432;"; // ℹ
+    div.appendChild(info);
+
+    const tooltip = document.createElement("span");
+    tooltip.className = "tooltip";
+    const faltan = requisitosFaltantes(mat);
+    tooltip.innerHTML = "Debes aprobar:<br>• " + faltan.map(id => idToNombre[id]).join("<br>• ");
+    div.appendChild(tooltip);
+  }
+
+  // Evento click
+  div.addEventListener("click", e => {
+    if (div.getAttribute("data-bloqueada") === "true") return;
+    if (div.getAttribute("data-aprobada") === "true") {
+      materiasAprobadas.delete(mat.id);
+    } else {
+      materiasAprobadas.add(mat.id);
+    }
+    guardarProgreso();
+    renderMalla();
+  });
+
+  return div;
+}
+
+function renderMalla() {
+  const cont = document.getElementById("malla");
+  cont.innerHTML = "";
+  estructura.forEach((cicloObj, idxCiclo) => {
+    // Una columna por ciclo/año
+    const col = document.createElement("div");
+    col.className = "columna";
+    // Título ciclo
+    const cicloH = document.createElement("h2");
+    cicloH.innerText = cicloObj.ciclo;
+    col.appendChild(cicloH);
+
+    cicloObj.semestres.forEach(sem => {
+      const semH = document.createElement("h3");
+      semH.innerText = sem.nombre;
+      col.appendChild(semH);
+
+      sem.materias.forEach(mat => {
+        const materiaDiv = crearMateria(mat);
+        col.appendChild(materiaDiv);
+      });
+    });
+    cont.appendChild(col);
+  });
+}
+
+window.addEventListener("DOMContentLoaded", () => {
+  cargarProgreso();
+  renderMalla();
+});
+  </script>
+</body>
+</html>
